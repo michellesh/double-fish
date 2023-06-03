@@ -55,7 +55,7 @@ void loop() {
   FastLED.clear();
   palette.cycle();
 
-  testAxisX();
+  testAxisY();
 
   // twinkle();
 
@@ -67,17 +67,20 @@ void loop() {
   FastLED.show();
 }
 
+CRGB fade(CRGB color, int value, int target, int threshold = 30) {
+  if (value < target - threshold || value > target + threshold) {
+    return CRGB::Black;
+  }
+  int dist = abs(target - value);
+  return color.nscale8(map(dist, 0, threshold, 255, 0));
+}
+
 void testAxisX() {
-  static int x = X_MIN;
-  static int inc = 1;
-  int threshold = 5;
+  static float x = X_MIN;
+  static float inc = 0.5;
   for (int i = 0; i < NUM_LEDS; i++) {
-    if (isBetween(leftX[i], x - threshold, x + threshold)) {
-      leftLEDs[i] = CRGB::White;
-    }
-    if (isBetween(rightX[i], x - threshold, x + threshold)) {
-      rightLEDs[i] = CRGB::White;
-    }
+    leftLEDs[i] = fade(CRGB::White, leftX[i], x);
+    rightLEDs[i] = fade(CRGB::White, rightX[i], x);
   }
 
   x += inc;
@@ -87,16 +90,11 @@ void testAxisX() {
 }
 
 void testAxisY() {
-  static int y = Y_MIN;
-  static int inc = 1;
-  int threshold = 5;
+  static float y = Y_MIN;
+  static float inc = 0.5;
   for (int i = 0; i < NUM_LEDS; i++) {
-    if (isBetween(leftY[i], y - threshold, y + threshold)) {
-      leftLEDs[i] = CRGB::White;
-    }
-    if (isBetween(rightY[i], y - threshold, y + threshold)) {
-      rightLEDs[i] = CRGB::White;
-    }
+    leftLEDs[i] = fade(CRGB::White, leftY[i], y);
+    rightLEDs[i] = fade(CRGB::White, rightY[i], y);
   }
 
   y += inc;
