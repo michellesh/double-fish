@@ -20,8 +20,8 @@ Blob blob = {15, 100, 100, 0.4, 0.8};
 void showBlobs() {
   float sum = 0;
   for (int i = 0; i < NUM_LEDS; i++) {
-    float diff = distance(leftX[i], leftY[i], blob.x, blob.y);
-    leftLEDs[i] = fade(CRGB::White, diff, blob.radius);
+    float d = distance(ledX[i], ledY[i], blob.x, blob.y);
+    leds[i] = fade(CRGB::White, d, blob.radius);
   }
 
   blob.update();

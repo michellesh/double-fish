@@ -37,8 +37,7 @@ void twinkle() {
     // on the "brightness = f( time )" idea.
     uint8_t brightness = getTwinkleBrightness(myclock30, myunique8);
     CRGB color = palette.getColor(i).nscale8(brightness);
-    leftLEDs[i] = color.nscale8(brightness);
-    rightLEDs[i] = color.nscale8(brightness);
+    leds[i] = color.nscale8(brightness);
   }
 }
 
