@@ -1,28 +1,52 @@
+#define NUM_BLOBS 10
+#define BLOB_FADE_WIDTH 20 // how far past the radius to fade
+
 struct Blob {
   float radius;
   float x;
   float y;
-  float xspeed;
-  float yspeed;
+  float xSpeed;
+  float ySpeed;
 
   void update() {
-    x += xspeed;
-    y += yspeed;
-    if (x > X_MAX || x < X_MIN)
-      xspeed *= -1;
-    if (y > Y_MAX || y < Y_MIN)
-      yspeed *= -1;
+    x += xSpeed;
+    y += ySpeed;
+    if (x > X_MAX + radius + BLOB_FADE_WIDTH ||
+        x < X_MIN - radius - BLOB_FADE_WIDTH)
+      xSpeed *= -1;
+    if (y > Y_MAX + radius + BLOB_FADE_WIDTH ||
+        y < Y_MIN - radius - BLOB_FADE_WIDTH)
+      ySpeed *= -1;
   }
 };
 
-Blob blob = {15, 100, 100, 0.4, 0.8};
+Blob blobs[NUM_BLOBS];
+
+void setupBlobs() {
+  for (int i = 0; i < NUM_BLOBS; i++) {
+    float radius = random(30, 100);
+    float x = random(X_MIN, X_MAX);
+    float y = random(Y_MIN, Y_MAX);
+    float xSpeed = float(random(1, 6)) / 10;
+    float ySpeed = float(random(1, 10)) / 10;
+    blobs[i] = {radius, x, y, xSpeed, ySpeed};
+  }
+}
 
 void showBlobs() {
-  float sum = 0;
   for (int i = 0; i < NUM_LEDS; i++) {
-    float d = distance(ledX[i], ledY[i], blob.x, blob.y);
-    leds[i] = fade(CRGB::White, d, blob.radius);
+    int brightness = 0;
+    for (int j = 0; j < NUM_BLOBS; j++) {
+      float d = distance(ledX[i], ledY[i], blobs[j].x, blobs[j].y);
+      int b = fadeBrightness(d, blobs[j].radius, BLOB_FADE_WIDTH);
+      if (b > brightness) {
+        leds[i] = palette.mapToColor(j, 0, NUM_BLOBS).nscale8(b);
+        brightness = b;
+      }
+    }
   }
 
-  blob.update();
+  for (int i = 0; i < NUM_BLOBS; i++) {
+    blobs[i].update();
+  }
 }

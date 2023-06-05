@@ -57,13 +57,20 @@ void setup() {
   ledsRight = &leds[NUM_LEDS_LEFT];
 
   FastLED.setBrightness(BRIGHTNESS);
+
+  randomSeed(analogRead(0));
+  setupBlobs();
 }
 
 void loop() {
   FastLED.clear();
   palette.cycle();
 
-  twinkle();
+  showBlobs();
+
+  EVERY_N_MILLISECONDS(100) {
+    Serial.println(analogRead(WHEEL_PIN));
+  }
 
   FastLED.show();
 }
@@ -72,7 +79,7 @@ void testAxisX() {
   static float x = X_MIN;
   static float inc = 0.5;
   for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = fade(CRGB::White, ledX[i], x);
+    leds[i] = fadeColor(CRGB::White, ledX[i], x);
   }
 
   x += inc;
@@ -85,7 +92,7 @@ void testAxisY() {
   static float y = Y_MIN;
   static float inc = 0.5;
   for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = fade(CRGB::White, ledY[i], y);
+    leds[i] = fadeColor(CRGB::White, ledY[i], y);
   }
 
   y += inc;
