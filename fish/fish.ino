@@ -2,12 +2,14 @@
 
 #include "colors.h"
 #include "utils.h"
+#include "Timer.h"
 
 #define NUM_LEDS_LEFT 53
 #define NUM_LEDS_RIGHT 54
 #define NUM_LEDS NUM_LEDS_LEFT + NUM_LEDS_RIGHT
-#define NUM_PATTERNS 3
-#define BRIGHTNESS 255
+#define NUM_PATTERNS 4
+#define BRIGHTNESS_MIN 20
+#define BRIGHTNESS_MAX 255
 
 #define LEFT_LED_PIN 13  // D7
 #define RIGHT_LED_PIN 14 // D5
@@ -47,6 +49,8 @@ CRGB *leds;
 CRGB *ledsLeft;
 CRGB *ledsRight;
 
+Timer longPressTimer = {2000}; // 2 seconds
+
 void setup() {
   Serial.begin(115200);
   delay(500);
@@ -59,7 +63,7 @@ void setup() {
   ledsLeft = &leds[0];
   ledsRight = &leds[NUM_LEDS_LEFT];
 
-  FastLED.setBrightness(BRIGHTNESS);
+  FastLED.setBrightness(BRIGHTNESS_MAX);
 
   randomSeed(analogRead(0));
   setupBlobs();
@@ -69,66 +73,58 @@ void setup() {
 
 void loop() {
   FastLED.clear();
-  palette.cycle();
 
-  static int paletteIndex = 0;
-  int wheelValue = analogRead(WHEEL_PIN);
-  if (wheelValue == WHEEL_MAX) {
-    palette.cycle();
-  } else {
-    int newPaletteIndex =
-        map(wheelValue, WHEEL_MAX, WHEEL_MIN, 0, palette.getNumPalettes() - 1);
-    if (newPaletteIndex != paletteIndex) {
-      paletteIndex = newPaletteIndex;
-      palette.setPalette(paletteIndex);
-    }
-  }
-
+  static int activePalette = 0;
   static int activePattern = 0;
-  static bool buttonHeld = false;
+
+  // Handle button state
+  static bool buttonDown = false;
+  static bool longPress = false;
   int buttonRead = digitalRead(BUTTON_PIN); // HIGH when button is held
-  if (buttonRead == HIGH) {
-    buttonHeld = true;
-  } else if (buttonRead == LOW && buttonHeld) {
+  if (!buttonDown && buttonRead == HIGH) {
+    buttonDown = true;
+    longPressTimer.reset();
+  } else if (buttonDown && longPressTimer.complete()) {
     activePattern = (activePattern + 1) % NUM_PATTERNS;
-    buttonHeld = false;
+    longPressTimer.reset();
+    longPress = true;
+  } else if (buttonRead == LOW && buttonDown) {
+    if (!longPress) {
+      activePalette = (activePalette + 1) % palette.getNumPalettes();
+      palette.setPalette(activePalette);
+    }
+    buttonDown = false;
+    longPress = false;
   }
 
+  EVERY_N_MILLISECONDS(500) {
+    Serial.print("----");
+    Serial.print("activePalette: ");
+    Serial.println(activePalette);
+    Serial.print("activePattern: ");
+    Serial.println(activePattern);
+  }
+
+  // Show LED pattern
   if (activePattern == 0) {
     twinkle();
   } else if (activePattern == 1) {
     showBlobs();
-  } else {
+  } else if (activePattern == 2) {
+    // rainbow
     for (int i = 0; i < NUM_LEDS; i++) {
       leds[i] = palette.getColorFromPalette(0);
     }
+  } else {
+    // solid color
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CHSV(map(ledX[i], X_MIN, X_MAX, 0, 255), 255, 255);
+    }
   }
+
+  int wheelValue = analogRead(WHEEL_PIN);
+  int brightness = map(wheelValue, WHEEL_MAX, WHEEL_MIN, BRIGHTNESS_MIN, BRIGHTNESS_MAX);
+  FastLED.setBrightness(brightness);
 
   FastLED.show();
-}
-
-void testAxisX() {
-  static float x = X_MIN;
-  static float inc = 0.5;
-  for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = fadeColor(CRGB::White, ledX[i], x);
-  }
-
-  x += inc;
-  if (x > X_MAX || x < X_MIN) {
-    inc *= -1;
-  }
-}
-
-void testAxisY() {
-  static float y = Y_MIN;
-  static float inc = 0.5;
-  for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = fadeColor(CRGB::White, ledY[i], y);
-  }
-
-  y += inc;
-  if (y > Y_MAX || y < Y_MIN) {
-    inc *= -1;
-  }
 }
