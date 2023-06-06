@@ -7,7 +7,7 @@
 #define NUM_LEDS_LEFT 53
 #define NUM_LEDS_RIGHT 54
 #define NUM_LEDS NUM_LEDS_LEFT + NUM_LEDS_RIGHT
-#define NUM_PATTERNS 4
+#define NUM_PATTERNS 3
 #define BRIGHTNESS_MIN 20
 #define BRIGHTNESS_MAX 255
 
@@ -17,9 +17,6 @@
 #define WHEEL_PIN 0      // A0
 #define WHEEL_MIN 0
 #define WHEEL_MAX 1024
-
-#include "Palette.h"
-Palette palette;
 
 float ledY[] = {50,  52,  56,  63,  72,  83,  94,  108, 121, 136, 151, 169,
                 185, 202, 214, 224, 238, 251, 263, 273, 280, 287, 298, 305,
@@ -44,6 +41,9 @@ float ledX[] = {265, 282, 298, 313, 327, 339, 350, 360, 369, 376, 380, 383,
                 118, 133, 146, 158, 173, 184, 184, 176, 171, 182, 180};
 float X_MIN = 11;
 float X_MAX = 403;
+
+#include "Palette.h"
+Palette palette;
 
 CRGB *leds;
 CRGB *ledsLeft;
@@ -90,19 +90,17 @@ void loop() {
     longPress = true;
   } else if (buttonRead == LOW && buttonDown) {
     if (!longPress) {
-      activePalette = (activePalette + 1) % palette.getNumPalettes();
-      palette.setPalette(activePalette);
+      int numPalettes = palette.getNumPalettes() + 1;
+      activePalette = (activePalette + 1) % numPalettes;
+      if (activePalette == numPalettes - 1) {
+        palette.setColorMode(Palette::RAINBOW);
+      } else {
+        palette.setColorMode(Palette::GRADIENT);
+        palette.setPalette(activePalette);
+      }
     }
     buttonDown = false;
     longPress = false;
-  }
-
-  EVERY_N_MILLISECONDS(500) {
-    Serial.print("----");
-    Serial.print("activePalette: ");
-    Serial.println(activePalette);
-    Serial.print("activePattern: ");
-    Serial.println(activePattern);
   }
 
   // Show LED pattern
@@ -110,15 +108,10 @@ void loop() {
     twinkle();
   } else if (activePattern == 1) {
     showBlobs();
-  } else if (activePattern == 2) {
-    // rainbow
-    for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = palette.getColorFromPalette(0);
-    }
   } else {
     // solid color
     for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = CHSV(map(ledX[i], X_MIN, X_MAX, 0, 255), 255, 255);
+      leds[i] = palette.getColor(i);
     }
   }
 

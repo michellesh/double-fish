@@ -47,11 +47,15 @@ public:
     return ColorFromPalette(_currentPalette, paletteIndex);
   }
 
-  CRGB getColor(uint8_t i) {
+  void setColorMode(uint8_t colorMode) {
+    _activeColorMode = colorMode;
+  }
+
+  CRGB getColor(uint8_t i = 0) {
     uint8_t paletteIndex = 0;
     switch (_activeColorMode) {
     case RAINBOW: {
-      // return rainbowColors[i];
+      return CHSV(map(ledX[i], X_MIN, X_MAX, 0, 255), 255, 255);
     }
     case GRADIENT: {
       paletteIndex = map(i, 0, NUM_LEDS - 1, 0, MAX_PALETTE_INDEX);

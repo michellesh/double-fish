@@ -40,7 +40,8 @@ void showBlobs() {
       float d = distance(ledX[i], ledY[i], blobs[j].x, blobs[j].y);
       int b = fadeBrightness(d, blobs[j].radius, BLOB_FADE_WIDTH);
       if (b > brightness) {
-        leds[i] = palette.mapToColor(j, 0, NUM_BLOBS).nscale8(b);
+        //leds[i] = palette.mapToColor(j, 0, NUM_BLOBS).nscale8(b);
+        leds[i] = palette.getColor(i).nscale8(b);
         brightness = b;
       }
     }
