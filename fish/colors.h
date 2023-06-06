@@ -1,8 +1,7 @@
-//CRGB rainbowColors[] = {
-//    CRGB::Red,   CRGB::Orange,          CRGB::Yellow,
-//    CRGB::Green, CRGB::Cyan CRGB::Blue, CRGB::Purple,
-//    CRGB::Pink,  CRGB::White,
-//};
+CRGB rainbowColors[] = {
+    CRGB::Red,  CRGB::Orange, CRGB::Yellow, CRGB::Green, CRGB::Cyan,
+    CRGB::Blue, CRGB::Purple, CRGB::Pink,   CRGB::White,
+};
 
 DEFINE_GRADIENT_PALETTE(_firePalette){
     0,   139, 10,  0,  // dark red with hint of orange

@@ -29,6 +29,15 @@ public:
     }
   }
 
+  int getNumPalettes() {
+    return sizeof(activePalettes) / sizeof(activePalettes[0]);
+  }
+
+  void setPalette(uint8_t whichPalette) {
+    _targetPalette = *(activePalettes[whichPalette]);
+    _currentPalette = *(activePalettes[whichPalette]);
+  }
+
   CRGB mapToColor(int value, int fromLow, int fromHigh) {
     uint8_t paletteIndex = map(value, fromLow, fromHigh, 0, MAX_PALETTE_INDEX);
     return ColorFromPalette(_currentPalette, paletteIndex);
@@ -42,7 +51,7 @@ public:
     uint8_t paletteIndex = 0;
     switch (_activeColorMode) {
     case RAINBOW: {
-      //return rainbowColors[i];
+      // return rainbowColors[i];
     }
     case GRADIENT: {
       paletteIndex = map(i, 0, NUM_LEDS - 1, 0, MAX_PALETTE_INDEX);

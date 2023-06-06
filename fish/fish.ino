@@ -6,12 +6,15 @@
 #define NUM_LEDS_LEFT 53
 #define NUM_LEDS_RIGHT 54
 #define NUM_LEDS NUM_LEDS_LEFT + NUM_LEDS_RIGHT
+#define NUM_PATTERNS 3
 #define BRIGHTNESS 255
 
 #define LEFT_LED_PIN 13  // D7
 #define RIGHT_LED_PIN 14 // D5
 #define BUTTON_PIN 4     // D2
 #define WHEEL_PIN 0      // A0
+#define WHEEL_MIN 0
+#define WHEEL_MAX 1024
 
 #include "Palette.h"
 Palette palette;
@@ -60,16 +63,45 @@ void setup() {
 
   randomSeed(analogRead(0));
   setupBlobs();
+
+  pinMode(BUTTON_PIN, INPUT);
 }
 
 void loop() {
   FastLED.clear();
   palette.cycle();
 
-  showBlobs();
+  static int paletteIndex = 0;
+  int wheelValue = analogRead(WHEEL_PIN);
+  if (wheelValue == WHEEL_MAX) {
+    palette.cycle();
+  } else {
+    int newPaletteIndex =
+        map(wheelValue, WHEEL_MAX, WHEEL_MIN, 0, palette.getNumPalettes() - 1);
+    if (newPaletteIndex != paletteIndex) {
+      paletteIndex = newPaletteIndex;
+      palette.setPalette(paletteIndex);
+    }
+  }
 
-  EVERY_N_MILLISECONDS(100) {
-    Serial.println(analogRead(WHEEL_PIN));
+  static int activePattern = 0;
+  static bool buttonHeld = false;
+  int buttonRead = digitalRead(BUTTON_PIN); // HIGH when button is held
+  if (buttonRead == HIGH) {
+    buttonHeld = true;
+  } else if (buttonRead == LOW && buttonHeld) {
+    activePattern = (activePattern + 1) % NUM_PATTERNS;
+    buttonHeld = false;
+  }
+
+  if (activePattern == 0) {
+    twinkle();
+  } else if (activePattern == 1) {
+    showBlobs();
+  } else {
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = palette.getColorFromPalette(0);
+    }
   }
 
   FastLED.show();
