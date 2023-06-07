@@ -49,7 +49,8 @@ CRGB *leds;
 CRGB *ledsLeft;
 CRGB *ledsRight;
 
-Timer longPressTimer = {2000}; // 2 seconds
+Timer longPressTimer = {2000}; // Hold button for 2 seconds to get a long press
+Timer doubleClickTimer = {250}; // <250 milliseconds between clicks to get a double click
 
 void setup() {
   Serial.begin(115200);
@@ -80,6 +81,7 @@ void loop() {
   // Handle button state
   static bool buttonDown = false;
   static bool longPress = false;
+  static bool autoCyclePalettes = false;
   int buttonRead = digitalRead(BUTTON_PIN); // HIGH when button is held
   if (!buttonDown && buttonRead == HIGH) {
     buttonDown = true;
@@ -89,7 +91,10 @@ void loop() {
     longPressTimer.reset();
     longPress = true;
   } else if (buttonRead == LOW && buttonDown) {
-    if (!longPress) {
+    if (!doubleClickTimer.complete()) {
+      autoCyclePalettes = true;
+    } else if (!longPress) {
+      autoCyclePalettes = false;
       int numPalettes = palette.getNumPalettes() + 1;
       activePalette = (activePalette + 1) % numPalettes;
       if (activePalette == numPalettes - 1) {
@@ -101,6 +106,11 @@ void loop() {
     }
     buttonDown = false;
     longPress = false;
+    doubleClickTimer.reset();
+  }
+
+  if (autoCyclePalettes) {
+    palette.cycle();
   }
 
   // Show LED pattern
